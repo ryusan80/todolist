@@ -1,78 +1,82 @@
-"use Client";
+"use client";
 import React, { useState } from "react";
+import type { FormEvent } from "react";
 
 export const App: React.FC = () => {
   const [todoText, setTodoText] = useState("");
-  const [IncompleteTodos, setIncompleteTodos] = useState<string[]>([]);
-  const [completeTodo, setCompleteTodo] = useState<string[]>([]);
+  const [incompleteTodos, setIncompleteTodos] = useState<string[]>([]);
+  const [completeTodos, setCompleteTodos] = useState<string[]>([]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTodoText(event.target.value);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLDivElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (todoText.trim() !== "") {
-      setIncompleteTodos([...IncompleteTodos, todoText]);
+    const text = todoText.trim();
+    if (text !== "") {
+      setIncompleteTodos((prev) => [...prev, text]);
       setTodoText("");
     }
   };
-  //完了の処理
-  const onClickComplete = (todo) => {
-    console.log("完了:", todo);
-    const newTodos = IncompleteTodos.map((t) => {});
+
+  // 完了に移動
+  const onClickComplete = (index: number) => {
+    const todo = incompleteTodos[index];
+    setIncompleteTodos((prev) => prev.filter((_, i) => i !== index));
+    setCompleteTodos((prev) => [...prev, todo]);
   };
 
-  //削除の処理
-  const onClickDelete = (todo) => {
-    console.log("削除:", todo);
-    const newTodos = IncompleteTodos.filter((t) => t.id !== todo.id);
-    setIncompleteTodos(newTodos);
+  // 未完リストから削除
+  const onClickDelete = (index: number) => {
+    setIncompleteTodos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // 完了リストから未完へ戻す
+  const onClickReturn = (index: number) => {
+    const todo = completeTodos[index];
+    setCompleteTodos((prev) => prev.filter((_, i) => i !== index));
+    setIncompleteTodos((prev) => [...prev, todo]);
   };
 
   return (
     <>
-      <div onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="TODOを入力"
           value={todoText}
           onChange={handleChange}
-        ></input>
-        <button>追加</button>
-      </div>
+        />
+        <button type="submit">追加</button>
+      </form>
+
       <div>
         <p className="title">未完のTODO</p>
         <ul>
-          {
-            (IncompleteTodos,
-            map(
-              (todo = (
-                <div key={todo.id} todo={todo}>
-                  <div className="list-row">
-                    <p className="todo-item">{todo}</p>
-                    <button onClick={() => onClickComplete(todo)}>完了</button>
-                    <button onClick={() => onClickDelete(todo)}>削除</button>
-                  </div>
-                </div>
-              ))
-            ))
-          }
-          ;
-        </ul>
-      </div>
-      <div>
-        <p className="title">完了のTODO</p>
-        <ul>
-          {completeTodo.map((todo) => (
-            <li key={todo}>
+          {incompleteTodos.map((todo, index) => (
+            <li key={index}>
               <div className="list-row">
                 <p className="todo-item">{todo}</p>
-                <button onClick={() => returnTodoText}>戻す</button>
+                <button onClick={() => onClickComplete(index)}>完了</button>
+                <button onClick={() => onClickDelete(index)}>削除</button>
               </div>
             </li>
           ))}
-          ;
+        </ul>
+      </div>
+
+      <div>
+        <p className="title">完了のTODO</p>
+        <ul>
+          {completeTodos.map((todo, index) => (
+            <li key={index}>
+              <div className="list-row">
+                <p className="todo-item">{todo}</p>
+                <button onClick={() => onClickReturn(index)}>戻す</button>
+              </div>
+            </li>
+          ))}
         </ul>
       </div>
     </>
